@@ -1,6 +1,6 @@
 import { createLogger } from '../common/helpers/logging/logger.js'
 import { parsePdfBuffer } from '../services/pdf-service.js'
-import { summarizeTextWithAzure } from '../services/openai-service.js'
+import { summarizeText } from '../services/openai-service.js'
 import Boom from '@hapi/boom'
 
 const logger = createLogger()
@@ -78,7 +78,7 @@ export const documents = [
         const pdfText = await parsePdfBuffer(buffer)
         
         // Summarize the text
-        const summary = await summarizeTextWithAzure(pdfText)
+        const summary = await summarizeText(pdfText)
         
         return h.response({
           success: true,

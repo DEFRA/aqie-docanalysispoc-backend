@@ -1,89 +1,61 @@
-import OpenAI from 'openai'
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 import { PromptTemplate } from 'langchain/prompts'
 import { StringOutputParser } from 'langchain/schema/output_parser'
 import { config } from '../config.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
-
 const logger = createLogger()
-
 export async function summarizeText(text) {
   try {
-    const apiKey = config.get('openai.apiKey')
-    if (!apiKey) {
-      throw new Error('OpenAI API key is not configured')
-    }
-
-    // Initialize the OpenAI model
-    const model = new OpenAI({
-      modelName: config.get('openai.model') || 'gpt-3.5-turbo-instruct',
-      openAIApiKey: apiKey,
-      temperature: 0.3
+    // Initialize the Bedrock client
+    const client = new BedrockRuntimeClient({ 
+      region: 'us-east-1'
     })
-
-    // Create a prompt template for summarization
-    const promptTemplate = PromptTemplate.fromTemplate(
-      'Summarize the following document in a concise way, highlighting the key points:\n\n{text}'
-    )
-
-    // Create a chain for processing 
-    const chain = promptTemplate.pipe(model).pipe(new StringOutputParser())
-
-    // Execute the chain with the text
-    const summary = await chain.invoke({ text })
-
+    
+    // Get model configuration
+    const modelId = 'anthropic.claude-v2'
+    const maxTokens = 128000
+    const temperature = 0.1
+    
+    logger.info(`Using AWS Bedrock model: ${modelId}`)
+    
+    // Format the prompt based on the model
+    let body = {}
+    
+    
+      // Claude models use a specific prompt format
+      const systemPrompt = 'You are an assistant that summarizes policy documents.'
+      const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
+      const prompt = `\n\nSystem: ${systemPrompt}\n\nUser:${userPrompt}\n\nAssistant:`
+      
+      body = {
+        prompt,
+        max_tokens_to_sample: maxTokens,
+        temperature,
+        top_k: 250,
+        top_p: 1,
+        stop_sequences: ["\n\nAssistant:"]
+      }
+    
+    const input = {
+      modelId,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify(body)
+    }
+    
+    // Invoke the model
+    const command = new InvokeModelCommand(input)
+    const response = await client.send(command)
+    
+    // Parse the response
+    const responseBody = JSON.parse(await response.body.transformToString())
+    
+    // Extract the generated text based on model type
+    let summary = responseBody.completion
+    
     return summary
   } catch (error) {
-    logger.error(`Error summarizing text: ${error.message}`)
-    throw new Error(`Failed to summarize text: ${error.message}`)
-  }
-}
-
-/**
- * Summarize text using Azure OpenAI
- * @param {string} text - Text to summarize
- * @returns {Promise<string>} - Summarized text
- */
-export async function summarizeTextWithAzure(text) {
-  try {
-    const apiKey = config.get('openai.apiKey')
-    const apiUrl = config.get('openai.apiUrl')
-    const model = config.get('openai.model') || 'gpt-4'
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API key is not configured')
-    }
-
-    // Import OpenAI dynamically to avoid issues with ESM/CJS
-    const { default: OpenAIApi } = await import('openai')
-
-    // Initialize the OpenAI client with Azure configuration
-    const openai = new OpenAIApi({
-      apiKey: apiKey,
-      baseURL: `${apiUrl}openai/deployments/${model}`,
-      defaultQuery: { 'api-version': '2023-07-01-preview' },
-      defaultHeaders: { 'api-key': apiKey }
-    })
-    
-    // Create completion using the OpenAI client
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an assistant that summarizes policy documents.'
-        },
-        { 
-          role: 'user', 
-          content: `Summarize the following document in a concise way, highlighting the key points:\n\n${text}` 
-        }
-      ],
-      model: model,
-      temperature: 0.7,
-      max_tokens: 4000
-    })
-    
-    return completion.choices[0].message.content
-  } catch (error) {
-    logger.error(`Error summarizing text with Azure: ${error.message}`)
-    throw new Error(`Failed to summarize text with Azure: ${error.message}`)
+    logger.error(`Error summarizing text with Bedrock: ${error.message}`)
+    throw new Error(`Failed to summarize text with Bedrock: ${error.message}`)
   }
 }
