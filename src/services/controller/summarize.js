@@ -17,10 +17,10 @@
 import { summarizeText } from '../helper/summarizetext.js'
 
 const summarizeController = async (request, h) => {
-  const getOSPlaces = await summarizeText(request)
+  const summarizeresult = await summarizeText(request)
   const allowOriginUrl = '*'
   return h
-    .response({ message: 'success', getOSPlaces })
+    .response({ message: 'success', summarizeresult })
     .code(200)
     .header('Access-Control-Allow-Origin', allowOriginUrl)
 }
