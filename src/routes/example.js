@@ -33,7 +33,9 @@ const example = [
     method: 'GET',
     path: '/example/{exampleId}',
     handler: async (request, h) => {
-      const entity = exampleData.find(item => item.exampleId === request.params.exampleId)
+      const entity = exampleData.find(
+        (item) => item.exampleId === request.params.exampleId
+      )
 
       if (!entity) {
         return Boom.notFound()

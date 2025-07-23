@@ -34,7 +34,7 @@ export async function parsePdfToJson(filePath) {
 export async function parsePdfToText(filePath) {
   try {
     const pages = await parsePdfToJson(filePath)
-    return pages.map(page => page.content).join('\n\n')
+    return pages.map((page) => page.content).join('\n\n')
   } catch (error) {
     logger.error(`Error parsing PDF to text: ${error.message}`)
     throw new Error(`Failed to parse PDF to text: ${error.message}`)
@@ -70,7 +70,7 @@ export async function saveTempFile(buffer) {
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true })
   }
-  
+
   const tempFilePath = `${tempDir}/${Date.now()}.pdf`
   await fs.promises.writeFile(tempFilePath, buffer)
   return tempFilePath

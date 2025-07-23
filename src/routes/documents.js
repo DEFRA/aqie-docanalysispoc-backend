@@ -1,5 +1,5 @@
 import { createLogger } from '../common/helpers/logging/logger.js'
-import { parsePdfBuffer } from '../services/pdf-service.js'
+// import { parsePdfBuffer } from '../services/pdf-service.js'
 import { summarizeText } from '../services/openai-service.js'
 import Boom from '@hapi/boom'
 
@@ -62,24 +62,28 @@ export const documents = [
       try {
         const { payload } = request
         const file = payload?.file
-        
-        if (!file || !file.hapi || file.hapi.headers['content-type'] !== 'application/pdf') {
+
+        if (
+          !file ||
+          !file.hapi ||
+          file.hapi.headers['content-type'] !== 'application/pdf'
+        ) {
           return Boom.badRequest('Please upload a PDF file')
         }
 
         // Convert the file stream to a buffer
-        const chunks = []
-        for await (const chunk of file) {
-          chunks.push(chunk)
-        }
-        const buffer = Buffer.concat(chunks)
-        
+        // const chunks = []
+        // for await (const chunk of file) {
+        //   chunks.push(chunk)
+        // }
+        // const buffer = Buffer.concat(chunks)
+
         // Parse the PDF buffer to text
-        const pdfText = await parsePdfBuffer(buffer)
-        
+        const pdfText = 'pdfText'//await parsePdfBuffer(buffer)
+
         // Summarize the text
-        const summary = await summarizeText(''pdfText'')
-        
+        const summary = await summarizeText(pdfText)
+
         return h.response({
           success: true,
           filename: file.hapi.filename,
@@ -87,7 +91,9 @@ export const documents = [
         })
       } catch (error) {
         logger.error(`Error processing document: ${error.message}`)
-        return Boom.badImplementation(`Error processing document: ${error.message}`)
+        return Boom.badImplementation(
+          `Error processing document: ${error.message}`
+        )
       }
     }
   }

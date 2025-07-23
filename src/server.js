@@ -23,7 +23,11 @@ async function createServer() {
       },
       cors: {
         origin: ['*'],
-        additionalHeaders: ['content-type', 'x-requested-with', 'authorization'],
+        additionalHeaders: [
+          'content-type',
+          'x-requested-with',
+          'authorization'
+        ],
         credentials: true,
         exposedHeaders: ['content-disposition']
       },
@@ -42,7 +46,7 @@ async function createServer() {
       stripTrailingSlash: true
     }
   })
-  
+
   await server.register([
     requestLogger,
     requestTracing,
