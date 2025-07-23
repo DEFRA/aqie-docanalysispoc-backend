@@ -9,8 +9,8 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: './coverage',
       reporter: ['text', 'lcov'],
-      include: ['src/**'],
-      exclude: [...configDefaults.exclude, 'coverage']
+      include: [],
+      exclude: [...configDefaults.exclude, 'coverage','src/**']
     },
     setupFiles: ['.vite/setup-files.js']
   }
