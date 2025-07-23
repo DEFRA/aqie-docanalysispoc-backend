@@ -5,7 +5,11 @@ export async function summarizeText(text) {
   try {
     // Initialize the Bedrock client
     const client = new BedrockRuntimeClient({
-      region: 'us-east-1'
+      region: 'us-east-1',
+      requestHandler: new NodeHttpHandler({
+        connectionTimeout: 10000,
+        socketTimeout: 30000,
+      })
     })
 
     // Get model configuration
@@ -19,16 +23,24 @@ export async function summarizeText(text) {
     let body = {}
 
     // Claude models use a specific prompt format
-    const systemPrompt = 'You are an assistant that summarizes policy documents.'
-    const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
-    const prompt = `\n\nSystem: ${systemPrompt}\n\nUser:${userPrompt}\n\nAssistant:`
+    //const systemPrompt = 'You are an assistant that summarizes policy documents.'
+    //const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
+    //const prompt = `\n\nSystem: ${systemPrompt}\n\nUser:${userPrompt}\n\nAssistant:`
 
     body = {
       anthropic_version: 'bedrock-2023-05-31',
-      prompt,
+      messages: [
+        {
+          role: "system",
+          content: "You are an assistant that summarizes policy documents."
+        },
+        {
+          role: "user",
+          content: `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
+        }
+      ],
       max_tokens_to_sample: maxTokens,
-      temperature,
-      stop_sequences: ["\n\nAssistant:"]
+      temperature
     }
 
     const input = {
