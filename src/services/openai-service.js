@@ -1,76 +1,54 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
+import {
+  BedrockRuntimeClient,
+  InvokeModelWithResponseStreamCommand
+} from '@aws-sdk/client-bedrock-runtime'
 import { createLogger } from '../common/helpers/logging/logger.js'
+ 
 const logger = createLogger()
+const client = new BedrockRuntimeClient({ region: "us-east-1" });
+ 
 export async function summarizeText(text) {
   try {
-    // Initialize the Bedrock client
-    const client = new BedrockRuntimeClient({
-      region: 'us-east-1',
-      requestHandler: new NodeHttpHandler({
-        connectionTimeout: 10000,
-        socketTimeout: 30000,
-      })
-    })
-
-    // Get model configuration
-    const modelId = 'anthropic.claude-3-sonnet-20240229-v1:0'
-    const maxTokens = 128000
-    const temperature = 0.1
-
-    logger.info(`Using AWS Bedrock model: ${modelId}`)
-
-    // Format the prompt based on the model
-    let body = {}
-
-    // Claude models use a specific prompt format
-    //const systemPrompt = 'You are an assistant that summarizes policy documents.'
-    //const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
-    //const prompt = `\n\nSystem: ${systemPrompt}\n\nUser:${userPrompt}\n\nAssistant:`
-
-    body = {
-      anthropic_version: 'bedrock-2023-05-31',
-      messages: [
-        {
-          role: "system",
-          content: "You are an assistant that summarizes policy documents."
-        },
-        {
-          role: "user",
-          content: `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
-        }
-      ],
-      max_tokens_to_sample: maxTokens,
-      temperature
-    }
-
-    const input = {
-      modelId,
-      contentType: 'application/json',
-      accept: 'application/json',
-      body: JSON.stringify(body)
-    }
-
-    logger.info(`Before invoking Bedrock`)
-
-    // Invoke the model
-    const command = new InvokeModelCommand(input)
-
-    const response = await client.send(command)
-
-    logger.info(`After invoking Bedrock`)
-
-    // Parse the response
-    const responseBody = JSON.parse(await response.body.transformToString())
-
-    logger.info(`Before Read response`)
-    // Extract the generated text based on model type
-    let summary = responseBody.completion
-    logger.info(`After Read response`)
-
-    return summary
+    const systemPrompt = 'You are an assistant that summarizes policy documents.'
+    const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
+ 
+    const prompt = `${systemPrompt}\n\n${userPrompt}`
+    const result = await getClaudeResponseAsJson(prompt)
+ 
+    return result.output
   } catch (error) {
-    logger.info(`Error summarizing text with Bedrock: ${error.message}`)
     logger.error(`Error summarizing text with Bedrock: ${error.message}`)
     throw new Error(`Failed to summarize text with Bedrock: ${error.message}`)
   }
+}
+ 
+export async function getClaudeResponseAsJson(prompt) {
+  const input = {
+    modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
+    contentType: "application/json",
+    accept: "*/*",
+    body: JSON.stringify({
+      anthropic_version: "bedrock-2023-05-31",
+      max_tokens: 128000,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  };
+ 
+  const command = new InvokeModelWithResponseStreamCommand(input);
+  const response = await client.send(command);
+ 
+  let fullText = "";
+ 
+  for await (const event of response.body) {
+    if (event.bytes) {
+      const chunk = JSON.parse(new TextDecoder().decode(event.bytes));
+      fullText += chunk?.delta?.text || "";
+    }
+  }
+ 
+  // Return as JSON
+  return {
+    success: true,
+    output: fullText,
+  };
 }
