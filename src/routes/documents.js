@@ -79,7 +79,7 @@ export const documents = [
         // const buffer = Buffer.concat(chunks)
 
         // Parse the PDF buffer to text
-        const pdfText = 'pdfText'//await parsePdfBuffer(buffer)
+        const pdfText = 'pdfText' //await parsePdfBuffer(buffer)
 
         // Summarize the text
         const summary = await summarizeText(pdfText)
