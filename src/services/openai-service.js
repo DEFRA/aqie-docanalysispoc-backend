@@ -10,11 +10,12 @@ const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
 export async function summarizeText(text) {
   try {
     console.log('summarise entered')
-
+    logger.info(`Summarizing text: ${'summarise entered'}`)
     const systemPrompt =
       'You are an assistant that summarizes policy documents.'
     //const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
     const userPrompt = 'Explain air quality in simple terms'
+    logger.info(`User prompt: ${userPrompt}`)
     console.log('userPrompt:', userPrompt)
     const prompt = `${systemPrompt}\n\n${userPrompt}`
     const result = await getClaudeResponseAsJson(prompt)
