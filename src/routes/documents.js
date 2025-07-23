@@ -78,7 +78,7 @@ export const documents = [
         const pdfText = await parsePdfBuffer(buffer)
         
         // Summarize the text
-        const summary = await summarizeText(pdfText)
+        const summary = await summarizeText(''pdfText'')
         
         return h.response({
           success: true,
