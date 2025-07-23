@@ -15,3 +15,15 @@ export default defineConfig({
     // setupFiles: ['.vite/setup-files.js']
   }
 })
+
+// import { defineConfig, configDefaults } from 'vitest/config'
+
+// export default defineConfig({
+//   test: {
+//     globals: true,
+//     environment: 'node',
+//     clearMocks: true,
+//     // Removed coverage block
+//     exclude: [...configDefaults.exclude, 'coverage']
+//   }
+// })
