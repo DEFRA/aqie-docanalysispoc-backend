@@ -1,6 +1,6 @@
 import {
   BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand
+  InvokeModelCommand
 } from '@aws-sdk/client-bedrock-runtime'
 import { createLogger } from '../../common/helpers/logging/logger.js'
 
@@ -12,8 +12,7 @@ async function summarizeText(text) {
     console.log('summarise entered')
     logger.info(`Summarizing text: ${'summarise entered'}`)
     const systemPrompt =
-      'You are an assistant that summarizes policy documents.'
-    //const userPrompt = `Summarize the following document in a concise way, highlighting the key points:\n\n${text}`
+      'You are an assistant working in air quality policy documents.'
     const userPrompt = 'Explain air quality in simple terms'
     logger.info(`User prompt: ${userPrompt}`)
     console.log('userPrompt:', userPrompt)
@@ -26,11 +25,12 @@ async function summarizeText(text) {
     throw new Error(`Failed to summarize text with Bedrock: ${error.message}`)
   }
 }
+
 async function getClaudeResponseAsJson(prompt) {
   const input = {
     modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
     contentType: 'application/json',
-    accept: '*/*',
+    accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
       max_tokens: 4096,
@@ -38,23 +38,15 @@ async function getClaudeResponseAsJson(prompt) {
     })
   }
 
-  const command = new InvokeModelWithResponseStreamCommand(input)
+  const command = new InvokeModelCommand(input)
   const response = await client.send(command)
 
-  let fullText = ''
-
-  for await (const event of response.body) {
-    if (event.bytes) {
-      const chunk = JSON.parse(new TextDecoder().decode(event.bytes))
-      fullText += chunk?.delta?.text || ''
-    }
-  }
-
-  // Return as JSON
+  const responseBody = JSON.parse(new TextDecoder().decode(response.body))
+  logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
   return {
     success: true,
-    output: fullText
-    // console.log(fullText);
+    output: responseBody.content
   }
 }
+
 export { summarizeText }
