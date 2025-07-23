@@ -12,6 +12,6 @@ export default defineConfig({
       include: [],
       exclude: [...configDefaults.exclude, 'coverage', 'src/**']
     },
-    setupFiles: ['.vite/setup-files.js']
+    // setupFiles: ['.vite/setup-files.js']
   }
 })
