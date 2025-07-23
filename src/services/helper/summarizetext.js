@@ -9,7 +9,7 @@ const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
 
 async function summarizeText(request) {
   try {
-    console.log('summarise entered')
+    // console.log('summarise entered')
     logger.info(`Summarizing text: ${'summarise entered'}`)
     // const systemPrompt = 'You are an assistant working in air quality policy documents.'
     // const userPrompt = 'Explain air quality in simple terms'
@@ -25,8 +25,8 @@ async function summarizeText(request) {
     const systemPrompt = parsedPayload.systemprompt
     const userPrompt = parsedPayload.userprompt
 
-    logger.info(`User prompt: ${userPrompt}`)
-    console.log('userPrompt:', userPrompt)
+    // logger.info(`User prompt: ${userPrompt}`)
+    // console.log('userPrompt:', userPrompt)
     const prompt = `${systemPrompt}\n\n${userPrompt}`
     const result = await getClaudeResponseAsJson(prompt)
 
@@ -39,7 +39,7 @@ async function summarizeText(request) {
 
 async function getClaudeResponseAsJson(prompt) {
   const input = {
-    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
@@ -53,7 +53,7 @@ async function getClaudeResponseAsJson(prompt) {
   const response = await client.send(command)
 
   const responseBody = JSON.parse(new TextDecoder().decode(response.body))
-  logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
+  //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
   return {
     success: true,
     output: responseBody.content
