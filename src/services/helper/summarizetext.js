@@ -6,6 +6,7 @@ import { createLogger } from '../../common/helpers/logging/logger.js'
 
 const logger = createLogger()
 const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
+// const modelIdrequest = ''
 
 async function summarizeText(request) {
   try {
@@ -24,9 +25,15 @@ async function summarizeText(request) {
     const parsedPayload = JSON.parse(request.payload)
     const systemPrompt = parsedPayload.systemprompt
     const userPrompt = parsedPayload.userprompt
+    // modelIdrequest = parsedPayload.modelid
 
     // logger.info(`User prompt: ${userPrompt}`)
     // console.log('userPrompt:', userPrompt)
+
+    // const prompt = JSON.stringify({
+    //     prompt: `${systemPrompt}\n\n${userPrompt}`
+    // });
+
     const prompt = `${systemPrompt}\n\n${userPrompt}`
     const result = await getClaudeResponseAsJson(prompt)
 
@@ -39,12 +46,14 @@ async function summarizeText(request) {
 
 async function getClaudeResponseAsJson(prompt) {
   const input = {
+    // modelId: modelIdrequest, //
     modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: 4096,
+      max_tokens: 16000, //4096,
+      temperature: 0.1,
       messages: [{ role: 'user', content: prompt }]
     })
   }
@@ -54,6 +63,15 @@ async function getClaudeResponseAsJson(prompt) {
 
   const responseBody = JSON.parse(new TextDecoder().decode(response.body))
   //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
+
+  logger.info(
+    `Response from Bedrock summarizeText: ${responseBody.ok ? 'Success' : 'Failure'}`
+  )
+  if (!responseBody.ok) {
+    throw new Error(
+      `Bedrock response error: ${responseBody.error || 'Unknown error'}`
+    )
+  }
   return {
     success: true,
     output: responseBody.content
