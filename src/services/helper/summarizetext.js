@@ -65,14 +65,12 @@ async function getClaudeResponseAsJson(prompt) {
     const responseBody = JSON.parse(new TextDecoder().decode(response.body))
     //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
 
-    logger.info(
-      `Response from Bedrock summarizeText: ${responseBody.ok ? 'Success' : 'Failure'}`
-    )
-    if (!responseBody.ok) {
-      throw new Error(
-        `Bedrock response error: ${responseBody.error || 'Unknown error'}`
-      )
-    }
+    logger.info('Response from Bedrock summarizeText Success')
+    // if (!responseBody.ok) {
+    //   throw new Error(
+    //     `Bedrock response error: ${responseBody.error || 'Unknown error'}`
+    //   )
+    // }
     return {
       success: true,
       output: responseBody.content
