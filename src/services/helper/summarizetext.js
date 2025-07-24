@@ -53,8 +53,8 @@ async function getClaudeResponseAsJson(prompt) {
       accept: 'application/json',
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
-        max_tokens: 16000, //4096,
-        temperature: 0.1,
+        max_tokens: 4096, //4096,
+        // temperature: 0.1,
         messages: [{ role: 'user', content: prompt }]
       })
     }
