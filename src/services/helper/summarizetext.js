@@ -2,10 +2,19 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand
 } from '@aws-sdk/client-bedrock-runtime'
+import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { createLogger } from '../../common/helpers/logging/logger.js'
 
 const logger = createLogger()
-const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
+// const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
+// ⏱️ Custom timeout settings
+const client = new BedrockRuntimeClient({
+  region: 'eu-west-2',
+  requestHandler: new NodeHttpHandler({
+    connectionTimeout: 10000, // 10 seconds to establish connection
+    socketTimeout: 300000 // 5 minutes to wait for response
+  })
+})
 // const modelIdrequest = ''
 
 async function summarizeText(request) {
@@ -53,7 +62,7 @@ async function getClaudeResponseAsJson(prompt) {
       accept: 'application/json',
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
-        max_tokens: 16000, //4096,
+        max_tokens: 2048, //4096,
         temperature: 0.1,
         messages: [{ role: 'user', content: prompt }]
       })
