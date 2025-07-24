@@ -45,36 +45,43 @@ async function summarizeText(request) {
 }
 
 async function getClaudeResponseAsJson(prompt) {
-  const input = {
-    // modelId: modelIdrequest, //
-    modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
-    contentType: 'application/json',
-    accept: 'application/json',
-    body: JSON.stringify({
-      anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: 16000, //4096,
-      temperature: 0.1,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  }
+  try {
+    const input = {
+      // modelId: modelIdrequest, //
+      modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify({
+        anthropic_version: 'bedrock-2023-05-31',
+        max_tokens: 16000, //4096,
+        temperature: 0.1,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    }
 
-  const command = new InvokeModelCommand(input)
-  const response = await client.send(command)
+    const command = new InvokeModelCommand(input)
+    const response = await client.send(command)
 
-  const responseBody = JSON.parse(new TextDecoder().decode(response.body))
-  //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body))
+    //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
 
-  logger.info(
-    `Response from Bedrock summarizeText: ${responseBody.ok ? 'Success' : 'Failure'}`
-  )
-  if (!responseBody.ok) {
-    throw new Error(
-      `Bedrock response error: ${responseBody.error || 'Unknown error'}`
+    logger.info(
+      `Response from Bedrock summarizeText: ${responseBody.ok ? 'Success' : 'Failure'}`
     )
-  }
-  return {
-    success: true,
-    output: responseBody.content
+    if (!responseBody.ok) {
+      throw new Error(
+        `Bedrock response error: ${responseBody.error || 'Unknown error'}`
+      )
+    }
+    return {
+      success: true,
+      output: responseBody.content
+    }
+  } catch (error) {
+    logger.error(`Error getClaudeResponseAsJson with Bedrock: ${error.message}`)
+    throw new Error(
+      `Failed getClaudeResponseAsJson with Bedrock: ${error.message}`
+    )
   }
 }
 
