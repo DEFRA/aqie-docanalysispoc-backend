@@ -119,7 +119,7 @@ const config = convict({
       default: 'gpt-4',
       env: 'OPENAI_MODEL'
     }
-  },
+  }, 
   cors: {
     enabled: {
       doc: 'Enable CORS',
