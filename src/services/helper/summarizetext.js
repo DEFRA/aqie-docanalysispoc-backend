@@ -4,8 +4,17 @@ import {
 } from '@aws-sdk/client-bedrock-runtime'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { createLogger } from '../../common/helpers/logging/logger.js'
+import { config } from '../../config.js'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { v4 as uuidv4 } from 'uuid'
 
 const logger = createLogger()
+
+const bedrock = new BedrockRuntimeClient({ region: 'eu-north-1' });
+const s3 = new S3Client({ region: 'eu-north-1' });
+// const { v4: uuidv4 } = require('uuid')
+
+
 // const client = new BedrockRuntimeClient({ region: 'eu-west-2' })
 // ⏱️ Custom timeout settings
 const client = new BedrockRuntimeClient({
@@ -44,9 +53,17 @@ async function summarizeText(request) {
     // });
 
     const prompt = `${systemPrompt}\n\n${userPrompt}`
+    const requestId = uuidv4();
+    const bedrockresult = await processWithBedrockAndWriteToS3(requestId, prompt);
+
+    // const prompt = `${systemPrompt}\n\n${userPrompt}`
     const result = await getClaudeResponseAsJson(prompt)
 
     return result.output
+
+    // const { content } = request.payload;
+
+
   } catch (error) {
     logger.error(`Error summarizing text with Bedrock: ${error.message}`)
     throw new Error(`Failed to summarize text with Bedrock: ${error.message}`)
@@ -68,12 +85,16 @@ async function getClaudeResponseAsJson(prompt) {
       })
     }
 
+    //for API call
+    // const awsTempApiUrl = config.get('AWSTempApiUrl')
+    // const awsTempApiKey = config.get('AWSTempApiKey')
+
     const command = new InvokeModelCommand(input)
     const response = await client.send(command)
 
     const responseBody = JSON.parse(new TextDecoder().decode(response.body))
     //   logger.info(`Response from Bedrock: ${JSON.stringify(responseBody)}`)
-
+    
     logger.info('Response from Bedrock summarizeText Success')
     // if (!responseBody.ok) {
     //   throw new Error(
@@ -89,6 +110,41 @@ async function getClaudeResponseAsJson(prompt) {
     throw new Error(
       `Failed getClaudeResponseAsJson with Bedrock: ${error.message}`
     )
+  }
+}
+
+async function processWithBedrockAndWriteToS3(requestId, content) {
+  const input = {
+    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify({
+      prompt: content,
+      max_tokens: 1000
+    })
+  };
+
+  try {
+    logger.info(`Processing with Bedrock`)
+    const command = new InvokeModelCommand(input);
+    logger.info(`Command created for Bedrock`)
+    const response = await bedrock.send(command);
+    logger.info(`Response received from Bedrock`)
+
+    const responseBodynew = JSON.parse(new TextDecoder().decode(response.body))
+      logger.info(`Response from Bedrock: ${JSON.stringify(responseBodynew)}`)
+
+      logger.info('S3 upload started')
+    const s3Command = new PutObjectCommand({
+      Bucket: 'dev-docanalysispocbucket-c63f2',
+      Key: `responses/${requestId}.json`,
+      Body: response.body,
+      ContentType: 'application/json'
+    });
+    logger.info('S3 upload ended')
+    await s3.send(s3Command);
+  } catch (error) {
+    console.error('Error processing with Bedrock or writing to S3:', error);
   }
 }
 
