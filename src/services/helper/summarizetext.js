@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const logger = createLogger()
 
-const bedrock = new BedrockRuntimeClient({ region: 'eu-north-1' });
+// const bedrock = new BedrockRuntimeClient({ region: 'eu-north-1' });
 const s3 = new S3Client({ region: 'eu-north-1' });
 // const { v4: uuidv4 } = require('uuid')
 
@@ -54,10 +54,11 @@ async function summarizeText(request) {
 
     const prompt = `${systemPrompt}\n\n${userPrompt}`
     const requestId = uuidv4();
-    const bedrockresult = await processWithBedrockAndWriteToS3(requestId, prompt);
+    logger.info(`Generated request ID: ${requestId}`)
+    const result = await processWithBedrockAndWriteToS3(requestId, prompt);
 
     // const prompt = `${systemPrompt}\n\n${userPrompt}`
-    const result = await getClaudeResponseAsJson(prompt)
+    // const result = await getClaudeResponseAsJson(prompt)
 
     return result.output
 
@@ -113,14 +114,16 @@ async function getClaudeResponseAsJson(prompt) {
   }
 }
 
-async function processWithBedrockAndWriteToS3(requestId, content) {
+async function processWithBedrockAndWriteToS3(requestId, prompt) {
   const input = {
-    modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
-      prompt: content,
-      max_tokens: 1000
+      anthropic_version: 'bedrock-2023-05-31',
+      max_tokens: 3500, //4096,
+      temperature: 0.1,
+      messages: [{ role: 'user', content: prompt }]
     })
   };
 
@@ -128,11 +131,11 @@ async function processWithBedrockAndWriteToS3(requestId, content) {
     logger.info(`Processing with Bedrock`)
     const command = new InvokeModelCommand(input);
     logger.info(`Command created for Bedrock`)
-    const response = await bedrock.send(command);
+    const response = await client.send(command);
     logger.info(`Response received from Bedrock`)
 
     const responseBodynew = JSON.parse(new TextDecoder().decode(response.body))
-      logger.info(`Response from Bedrock: ${JSON.stringify(responseBodynew)}`)
+      logger.info(`Response from Bedrock success`)
 
       logger.info('S3 upload started')
     const s3Command = new PutObjectCommand({
@@ -143,6 +146,10 @@ async function processWithBedrockAndWriteToS3(requestId, content) {
     });
     logger.info('S3 upload ended')
     await s3.send(s3Command);
+    return {
+      success: true,
+      output: responseBodynew.content
+    }
   } catch (error) {
     console.error('Error processing with Bedrock or writing to S3:', error);
   }
