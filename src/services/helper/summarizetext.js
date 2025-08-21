@@ -62,9 +62,6 @@ async function summarizeText(request) {
 
     return result.output
 
-    // const { content } = request.payload;
-
-
   } catch (error) {
     logger.error(`Error summarizing text with Bedrock: ${error.message}`)
     throw new Error(`Failed to summarize text with Bedrock: ${error.message}`)
