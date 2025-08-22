@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 const logger = createLogger()
 
 // const bedrock = new BedrockRuntimeClient({ region: 'eu-north-1' });
-const s3 = new S3Client({ region: 'eu-north-1' });
+const s3 = new S3Client({ region: 'eu-west-2' });
 // const { v4: uuidv4 } = require('uuid')
 
 
@@ -144,7 +144,7 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       if (!responseBodynew || !responseBodynew.content) {
         throw new Error(`Invalid response structure from Bedrock: ${responseBodynew}`);
       }
-  
+      logger.info(`Uploading to S3 bucket in region: ${process.env.AWS_REGION}`);
       logger.info('S3 upload started')
     const s3Command = new PutObjectCommand({
       Bucket: 'dev-aqie-docanalysis-c63f2',
