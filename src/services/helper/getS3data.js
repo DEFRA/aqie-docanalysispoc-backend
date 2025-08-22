@@ -6,11 +6,13 @@ import { v4 as uuidv4 } from 'uuid'
 const logger = createLogger()
 async function getS3(requestId) {
     try { 
-        const parsedPayload = JSON.parse(request.payload)
-        const userrequestId = parsedPayload.requestId
+        // const parsedPayload = JSON.parse(request.payload)
+        // const userrequestId = parsedPayload.requestId
+        logger.info(`Retrieving data before from S3 for request ID: ${userrequestId}`)
+        const userrequestId = request.params.requestId
         const s3 = new S3Client({ region: `${process.env.AWS_REGION}` });
         
-    logger.info(`Retrieving data from S3 for request ID: ${userrequestId}`)
+    logger.info(`Retrieving data after from S3 for request ID: ${userrequestId}`)
     try {
         logger.info('S3 read started')
       const getCommand = new GetObjectCommand({
