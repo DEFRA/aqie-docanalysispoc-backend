@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 const logger = createLogger()
 
 // const bedrock = new BedrockRuntimeClient({ region: 'eu-north-1' });
-const s3 = new S3Client({ region: 'eu-west-2' });
+const s3 = new S3Client({ region: `${process.env.AWS_REGION}` });
 // const { v4: uuidv4 } = require('uuid')
 
 
@@ -55,16 +55,17 @@ async function summarizeText(request) {
     const prompt = `${systemPrompt}\n\n${userPrompt}`
     const requestId = uuidv4();
     logger.info(`Generated request ID: ${requestId}`)
-    const result = await processWithBedrockAndWriteToS3(requestId, prompt);
+    const result =  processWithBedrockAndWriteToS3(requestId, prompt);
 
     // const prompt = `${systemPrompt}\n\n${userPrompt}`
     // const result = await getClaudeResponseAsJson(prompt)
 
-    if (!result || !result.success || !result.output) {
-      throw new Error(`Bedrock response missing output. Full result: ${JSON.stringify(result)}`);
-    }
+    // if (!result || !result.success || !result.output) {
+    //   throw new Error(`Bedrock response missing output. Full result: ${JSON.stringify(result)}`);
+    // }
 
-    return result.output
+    // return result.output
+    return requestId
 
   } catch (error) {
     logger.error(`Error summarizing text with Bedrock: ${error.message}`)
@@ -135,11 +136,11 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
     const response = await client.send(command);
     logger.info(`Response received from Bedrock`)
     
-    const startTime = Date.now();
+    // const startTime = Date.now();
     const responseBodynew = JSON.parse(new TextDecoder().decode(response.body))
     logger.info(`Response from Bedrock success`)
-    const duration = Date.now() - startTime;
-    logger.info(`Bedrock processing duration: ${duration}ms`);
+    // const duration = Date.now() - startTime;
+    // logger.info(`Bedrock processing duration: ${duration}ms`);
 
       if (!responseBodynew || !responseBodynew.content) {
         throw new Error(`Invalid response structure from Bedrock: ${responseBodynew}`);

@@ -1,19 +1,24 @@
 import { createLogger } from '../../common/helpers/logging/logger.js'
 import { Readable } from 'stream'
-import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 
 const logger = createLogger()
 async function getS3(requestId) {
     try { 
-
-    logger.info(`Retrieving data from S3 for request ID: ${requestId}`)
+        const parsedPayload = JSON.parse(request.payload)
+        const userrequestId = parsedPayload.requestId
+        const s3 = new S3Client({ region: `${process.env.AWS_REGION}` });
+        
+    logger.info(`Retrieving data from S3 for request ID: ${userrequestId}`)
     try {
+        logger.info('S3 read started')
       const getCommand = new GetObjectCommand({
         Bucket: 'dev-aqie-docanalysis-c63f2',
-        Key: `responses/${requestId}.json`
+        Key: `responses/${userrequestId}.json`
       });  
       const response = await s3.send(getCommand);
+      logger.info('S3 read ended')
       const bodyString = await streamToString(response.Body);
       if (bodyString === 'No data found') {
         return {
@@ -50,11 +55,11 @@ async function getS3(requestId) {
     return Buffer.concat(chunks).toString('utf-8');
   }
 
-  async function readResponseFromS3new(requestId) {
+  async function readResponseFromS3new(userrequestId) {
     try {
       const getCommand = new GetObjectCommand({
         Bucket: 'dev-aqie-docanalysis-c63f2',
-        Key: `responses/${requestId}.json`
+        Key: `responses/${userrequestId}.json`
       });  
       const response = await s3.send(getCommand);  
       const chunks = [];
