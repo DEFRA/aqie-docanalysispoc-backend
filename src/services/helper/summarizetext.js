@@ -60,6 +60,10 @@ async function summarizeText(request) {
     // const prompt = `${systemPrompt}\n\n${userPrompt}`
     // const result = await getClaudeResponseAsJson(prompt)
 
+    if (!result || !result.success || !result.output) {
+      throw new Error(`Bedrock response missing output. Full result: ${JSON.stringify(result)}`);
+    }
+
     return result.output
 
   } catch (error) {
@@ -130,13 +134,20 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
     logger.info(`Command created for Bedrock`)
     const response = await client.send(command);
     logger.info(`Response received from Bedrock`)
-
+    
+    const startTime = Date.now();
     const responseBodynew = JSON.parse(new TextDecoder().decode(response.body))
-      logger.info(`Response from Bedrock success`)
+    logger.info(`Response from Bedrock success`)
+    const duration = Date.now() - startTime;
+    logger.info(`Bedrock processing duration: ${duration}ms`);
 
+      if (!responseBodynew || !responseBodynew.content) {
+        throw new Error(`Invalid response structure from Bedrock: ${responseBodynew}`);
+      }
+  
       logger.info('S3 upload started')
     const s3Command = new PutObjectCommand({
-      Bucket: 'dev-docanalysispocbucket-c63f2',
+      Bucket: 'dev-aqie-docanalysis-c63f2',
       Key: `responses/${requestId}.json`,
       Body: response.body,
       ContentType: 'application/json'
@@ -147,9 +158,19 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       success: true,
       output: responseBodynew.content
     }
-  } catch (error) {
-    console.error('Error processing with Bedrock or writing to S3:', error);
-  }
+  } 
+  // catch (error) {
+  //   console.error('Error processing with Bedrock or writing to S3:', error);
+  // }  
+catch (error) {
+  logger.error(`Error processing with Bedrock or writing to S3: ${error.message}`);
+  return {
+    success: false,
+    output: null,
+    error: error.message
+  };
+}
+
 }
 
 export { summarizeText }
