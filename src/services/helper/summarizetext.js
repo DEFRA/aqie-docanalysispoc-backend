@@ -153,8 +153,8 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       Body: response.body,
       ContentType: 'application/json'
     });
+    await s3.send(s3Command)
     logger.info('S3 upload ended')
-    await s3.send(s3Command);
     return {
       success: true,
       output: responseBodynew.content
