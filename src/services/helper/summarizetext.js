@@ -150,11 +150,12 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
     const s3Command = new PutObjectCommand({
       Bucket: 'dev-aqie-docanalysis-c63f2',
       Key: `responses/${requestId}.json`,
-      Body: responseBodynew.content,
+      Body: response.body,
       ContentType: 'application/json'
     });
     await s3.send(s3Command)
     logger.info('S3 upload ended')
+    
     return {
       success: true,
       output: responseBodynew.content
