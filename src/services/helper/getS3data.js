@@ -38,7 +38,7 @@ async function getS3(request) {
 
       return {
         status: 'completed',
-        result: parsedData?.content?.result?.content?.find(item => item.type === 'text')?.text || 'No text found'
+        result: parsedData
       };
     } catch (error) {
       logger.error('Error reading from S3:', error);
