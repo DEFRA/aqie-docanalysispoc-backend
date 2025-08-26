@@ -48,6 +48,14 @@ async function getS3(request) {
       };
     }
   } catch (error) {
+        // Handle missing key error specifically
+        if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404 || error.message.includes('The specified key does not exist')) {
+            logger.warn(`S3 key not found for requestId: ${userrequestId}`);
+            return {
+              status: 'pending',
+              message: 'The specified key does not exist.'
+            };
+          }
     logger.error(`Error getting the data from getS3: ${error.message}`);
     return {
       status: 'error',
