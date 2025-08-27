@@ -1,7 +1,8 @@
 import {
   BedrockRuntimeClient,
-  StartAsyncInferenceCommand
+  StartAsyncInvokeCommand
 } from '@aws-sdk/client-bedrock-runtime'
+import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { createLogger } from '../../common/helpers/logging/logger.js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -36,7 +37,7 @@ async function summarizeText(request) {
 }
 
 async function processWithBedrockAndWriteToS3(requestId, prompt) {
-  const command = new StartAsyncInferenceCommand({
+  const command = new StartAsyncInvokeCommand({
     clientRequestToken: requestId,
     modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
     modelInput: {
@@ -53,8 +54,12 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
   })
 
   try {
+
+    logger.info(`Async invoke started`)
+
     const response = await client.send(command)
-    logger.info(`Async inference started: ${response.invocationArn}`)
+    
+    logger.info(`Async invoke completed`)
     
     return {
       success: true,
@@ -62,7 +67,7 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       requestId: requestId
     }
   } catch (error) {
-    logger.error(`Error starting async inference: ${error.message}`)
+    logger.error(`Error starting Bedrock async invoke command: ${error.message}`)
     return {
       success: false,
       error: error.message
