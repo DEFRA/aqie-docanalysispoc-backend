@@ -99,6 +99,20 @@ const config = convict({
       env: 'TRACING_HEADER'
     }
   },
+  aws: {
+    region: {
+      doc: 'AWS region for S3 operations',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    },
+    s3BucketName: {
+      doc: 'S3 bucket name for file uploads',
+      format: String,
+      default: 'dev-aqie-docanalysis-c63f2',
+      env: 'AWS_S3_BUCKET_NAME'
+    }
+  },
   openai: {
     apiKey: {
       doc: 'OpenAI API Key',
@@ -119,7 +133,7 @@ const config = convict({
       default: 'gpt-4',
       env: 'OPENAI_MODEL'
     }
-  }, 
+  },
   cors: {
     enabled: {
       doc: 'Enable CORS',
