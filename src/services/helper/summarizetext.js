@@ -116,8 +116,10 @@ async function summarizeText(request) {
 // }
 
 async function processWithBedrockAndWriteToS3(requestId, prompt) {
+  // Using DEFRA CDP Bedrock configuration
+  // Reference: https://portal.cdp-int.defra.cloud/documentation/how-to/bedrock-ai.md
   const input = {
-    modelId: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
+    modelId: 'arn:aws:bedrock:eu-west-2:332499610595:application-inference-profile/e4amybi3as0i',
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
@@ -125,7 +127,9 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       max_tokens: 3500, //4096,
       temperature: 0.1,
       messages: [{ role: 'user', content: prompt }]
-    })
+    }),
+    guardrailIdentifier: 'eqs44398uvjn',
+    guardrailVersion: '1'
   }
 
   try {

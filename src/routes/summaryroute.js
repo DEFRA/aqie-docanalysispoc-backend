@@ -12,16 +12,7 @@ const summarize = [
   {
     method: 'POST',
     path: '/summarize',
-    handler: summarizeController,
-    options: {
-      payload: {
-        output: 'stream',
-        parse: true,
-        multipart: true,
-        maxBytes: 50 * 1024 * 1024, // 50MB limit
-        allow: 'multipart/form-data'
-      }
-    }
+    handler: summarizeController
   }
 ]
 export { summarize }
