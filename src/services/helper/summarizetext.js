@@ -129,7 +129,8 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
       messages: [{ role: 'user', content: prompt }]
     }),
     guardrailIdentifier: 'arn:aws:bedrock:eu-west-2:332499610595:guardrail/eqs44398uvjn',
-    guardrailVersion: '1'
+    guardrailVersion: '1',
+    trace: 'ENABLED'
   }
 
   try {
