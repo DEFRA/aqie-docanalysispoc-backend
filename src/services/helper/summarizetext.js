@@ -52,6 +52,7 @@ async function summarizeText(request) {
     // });
 
     const prompt = `${systemPrompt}\n\n${userPrompt}`
+    logger.info(`Input prompt: ${prompt}`)
     const requestId = uuidv4()
     logger.info(`Generated request ID: ${requestId}`)
     /*eslint-disable no-unused-vars */
