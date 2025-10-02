@@ -145,10 +145,79 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
     logger.info(`Response from Bedrock success`)
     // const duration = Date.now() - startTime;
     // logger.info(`Bedrock processing duration: ${duration}ms`);
+    logger.info(`Response body: ${JSON.stringify(responseBodynew, null, 2)}`)
+
+    // Check if guardrail blocked the output
+    if (responseBodynew.error && responseBodynew.error.includes('content policy violations')) {
+      logger.error('GUARDRAIL BLOCKED OUTPUT: Content policy violation in AI response')
+      logger.error('This means the AI generated content that the guardrail considers inappropriate')
+
+      // Return a safe fallback response
+      const fallbackResponse = {
+        content: [{
+          text: "I apologize, but I cannot provide a complete analysis of this document due to content policy restrictions."
+        }]
+      }
+
+      logger.info('Using fallback response due to guardrail intervention')
+      const s3Command = new PutObjectCommand({
+        Bucket: config.get('aws.s3BucketName'),
+        Key: `responses/${requestId}.json`,
+        Body: JSON.stringify(fallbackResponse, null, 2),
+        ContentType: 'application/json'
+      })
+      await s3.send(s3Command)
+
+      return {
+        success: true,
+        output: fallbackResponse.content,
+        warning: 'Response was filtered by content policy'
+      }
+    }
+
+    // Check for other guardrail interventions
+    if (responseBodynew.stop_reason === 'guardrail_intervened' ||
+      (responseBodynew.content && responseBodynew.content[0] &&
+        responseBodynew.content[0].text &&
+        responseBodynew.content[0].text.includes('content policy violations'))) {
+
+      logger.error('GUARDRAIL INTERVENTION DETECTED in response content')
+      logger.error('Original response:', JSON.stringify(responseBodynew, null, 2))
+
+      // Try to extract any partial content before intervention
+      let partialContent = "Document analysis was interrupted due to content policy restrictions."
+      if (responseBodynew.content && responseBodynew.content[0] && responseBodynew.content[0].text) {
+        const text = responseBodynew.content[0].text
+        const policyIndex = text.indexOf('content policy violations')
+        if (policyIndex > 0) {
+          partialContent = text.substring(0, policyIndex).trim() + "\n\n[Analysis truncated due to content policy]"
+        }
+      }
+
+      const modifiedResponse = {
+        content: [{
+          text: partialContent
+        }]
+      }
+
+      const s3Command = new PutObjectCommand({
+        Bucket: config.get('aws.s3BucketName'),
+        Key: `responses/${requestId}.json`,
+        Body: JSON.stringify(modifiedResponse, null, 2),
+        ContentType: 'application/json'
+      })
+      await s3.send(s3Command)
+
+      return {
+        success: true,
+        output: modifiedResponse.content,
+        warning: 'Response was partially filtered by content policy'
+      }
+    }
 
     if (!responseBodynew || !responseBodynew.content) {
       throw new Error(
-        `Invalid response structure from Bedrock: ${responseBodynew}`
+        `Invalid response structure from Bedrock: ${JSON.stringify(responseBodynew)}`
       )
     }
     logger.info(`Uploading to S3 bucket in region: ${process.env.AWS_REGION}`)
