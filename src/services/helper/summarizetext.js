@@ -67,8 +67,8 @@ async function summarizeText(request) {
 
     /*eslint-disable no-unused-vars */
     const result = useDirectApi
-      ? await processWithDirectBedrockAndWriteToS3(requestId, systemPrompt, userPrompt)
-      : await processWithBedrockAndWriteToS3(requestId, prompt)
+      ? processWithDirectBedrockAndWriteToS3(requestId, systemPrompt, userPrompt)
+      : processWithBedrockAndWriteToS3(requestId, prompt)
     /*eslint-enable*/
 
     return requestId
