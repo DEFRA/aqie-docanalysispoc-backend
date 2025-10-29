@@ -92,8 +92,8 @@ async function processWithBedrockAndWriteToS3(requestId, prompt) {
     accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
-      max_tokens: 3500,
-      temperature: 0.1,
+      max_tokens: 15000,
+      temperature: 0.0,
       messages: [{ role: 'user', content: prompt }]
     }),
     guardrailIdentifier: 'arn:aws:bedrock:eu-west-2:332499610595:guardrail/eqs44398uvjn',
@@ -156,7 +156,7 @@ async function processWithDirectBedrockAndWriteToS3(requestId, systemPrompt, use
   const requestBody = JSON.stringify({
     system: systemPrompt,
     anthropic_version: 'bedrock-2023-05-31',
-    max_tokens: 3500,
+    max_tokens: 15000,
     temperature: 0.0,
     messages: [{ role: 'user', content: userPrompt }]
   })
